@@ -180,6 +180,14 @@ pub enum LitToConstError {
     Reported(ErrorGuaranteed),
 }
 
+/// A counter to keep a track of the allocations for statics
+#[derive(Copy, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct NewShinyLocalId(pub NonZeroU64);
+
+impl fmt::Debug for NewShinyLocalId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "nsl{}", self.0) }
+}
+
 #[derive(Copy, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AllocId(pub NonZeroU64);
 
