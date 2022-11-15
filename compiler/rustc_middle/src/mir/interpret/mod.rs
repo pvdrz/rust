@@ -185,7 +185,9 @@ pub enum LitToConstError {
 pub struct NewShinyLocalId(pub NonZeroU64);
 
 impl fmt::Debug for NewShinyLocalId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "nsl{}", self.0) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "nsl{}", self.0)
+    }
 }
 
 #[derive(Copy, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
