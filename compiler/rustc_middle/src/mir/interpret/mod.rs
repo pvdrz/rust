@@ -182,6 +182,7 @@ pub enum LitToConstError {
 
 /// A counter to keep a track of the allocations for statics
 #[derive(Copy, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[repr(transparent)]
 pub struct NewShinyLocalId(pub NonZeroU64);
 
 impl fmt::Debug for NewShinyLocalId {
@@ -414,7 +415,7 @@ pub enum GlobalAlloc<'tcx> {
     VTable(Ty<'tcx>, Option<ty::PolyExistentialTraitRef<'tcx>>),
     /// The alloc ID points to a "lazy" static variable that did not get computed (yet).
     /// This is also used to break the cycle in recursive statics.
-    Static(DefId),
+    Static(DefId, Option<NewShinyLocalId>),
     /// The alloc ID points to memory.
     Memory(ConstAllocation<'tcx>),
 }
@@ -464,6 +465,8 @@ pub(crate) struct AllocMap<'tcx> {
     /// The `AllocId` to assign to the next requested ID.
     /// Always incremented; never gets smaller.
     next_id: AllocId,
+
+    local_id_map: FxHashMap<NewShinyLocalId, AllocId>,
 }
 
 impl<'tcx> AllocMap<'tcx> {
@@ -472,6 +475,7 @@ impl<'tcx> AllocMap<'tcx> {
             alloc_map: Default::default(),
             dedup: Default::default(),
             next_id: AllocId(NonZeroU64::new(1).unwrap()),
+            local_id_map: Default::default(),
         }
     }
     fn reserve(&mut self) -> AllocId {
