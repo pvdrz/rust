@@ -466,7 +466,7 @@ pub(crate) struct AllocMap<'tcx> {
     /// Always incremented; never gets smaller.
     next_id: AllocId,
 
-    local_id_map: FxHashMap<NewShinyLocalId, AllocId>,
+    local_id_map: FxHashMap<AllocId, Allocation>,
 }
 
 impl<'tcx> AllocMap<'tcx> {
@@ -488,6 +488,14 @@ impl<'tcx> AllocMap<'tcx> {
         next
     }
 }
+
+// TODO (Aman): const ref muts next steps -
+//  add getter and setter for local_id_map in the AllocMap
+//  import do not set this map twice, if the allocid exists, just move on or panic!
+//  then follow the compiler to add the missing field
+//  use the id in Oli's PR instead of creating new one here. and instead of putting it in extra field
+//  as Oli does you put it in the hashmap created above.
+//  link to old PR https://github.com/rust-lang/rust/compare/master...ferrous-systems:rust:unique_static_innards
 
 impl<'tcx> TyCtxt<'tcx> {
     /// Obtains a new allocation ID that can be referenced but does not
