@@ -489,7 +489,7 @@ impl<'tcx> AllocMap<'tcx> {
     }
 }
 
-// TODO (Aman): const ref muts next steps -
+// FIXME (Aman): const ref muts next steps -
 //  add getter and setter for local_id_map in the AllocMap
 //  import do not set this map twice, if the allocid exists, just move on or panic!
 //  then follow the compiler to add the missing field
