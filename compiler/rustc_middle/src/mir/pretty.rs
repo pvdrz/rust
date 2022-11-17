@@ -746,6 +746,7 @@ pub fn write_allocations<'tcx>(
             Some(GlobalAlloc::VTable(ty, None)) => {
                 write!(w, " (vtable: impl <auto trait> for {ty})")?
             }
+            // FIXME (Aman): NewShinyLocalId
             Some(GlobalAlloc::Static(did, _)) if !tcx.is_foreign_item(did) => {
                 match tcx.eval_static_initializer(did) {
                     Ok(alloc) => {
@@ -759,6 +760,7 @@ pub fn write_allocations<'tcx>(
                     )?,
                 }
             }
+            // FIXME (Aman): NewShinyLocalId
             Some(GlobalAlloc::Static(did, _)) => {
                 write!(w, " (extern static: {})", tcx.def_path_str(did))?
             }
