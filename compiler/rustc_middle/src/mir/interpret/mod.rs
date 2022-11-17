@@ -181,9 +181,9 @@ pub enum LitToConstError {
 }
 
 /// A counter to keep a track of the allocations for statics
-#[derive(Copy, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, HashStable, TyEncodable, TyDecodable)]
 #[repr(transparent)]
-pub struct NewShinyLocalId(pub NonZeroU64);
+pub struct NewShinyLocalId(usize);
 
 impl fmt::Debug for NewShinyLocalId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -234,7 +234,8 @@ pub fn specialized_encode_alloc_id<'tcx, E: TyEncoder<I = TyCtxt<'tcx>>>(
             ty.encode(encoder);
             poly_trait_ref.encode(encoder);
         }
-        GlobalAlloc::Static(did) => {
+        // FIXME (Aman): NewShinyLocalId
+        GlobalAlloc::Static(did, _) => {
             assert!(!tcx.is_thread_local_static(did));
             // References to statics doesn't need to know about their allocations,
             // just about its `DefId`.
@@ -490,7 +491,7 @@ impl<'tcx> AllocMap<'tcx> {
 }
 
 // FIXME (Aman): const ref muts next steps -
-//  add getter and setter for local_id_map in the AllocMap
+//  add getter and setter for local_id_map in the TyCtxt below
 //  import do not set this map twice, if the allocid exists, just move on or panic!
 //  then follow the compiler to add the missing field
 //  use the id in Oli's PR instead of creating new one here. and instead of putting it in extra field
@@ -529,7 +530,8 @@ impl<'tcx> TyCtxt<'tcx> {
     /// Generates an `AllocId` for a static or return a cached one in case this function has been
     /// called on the same static before.
     pub fn create_static_alloc(self, static_id: DefId) -> AllocId {
-        self.reserve_and_set_dedup(GlobalAlloc::Static(static_id))
+        // FIXME (Aman): NewShinyLocalId
+        self.reserve_and_set_dedup(GlobalAlloc::Static(static_id, None))
     }
 
     /// Generates an `AllocId` for a function.  Depending on the function type,

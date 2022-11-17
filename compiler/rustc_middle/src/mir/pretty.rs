@@ -746,7 +746,7 @@ pub fn write_allocations<'tcx>(
             Some(GlobalAlloc::VTable(ty, None)) => {
                 write!(w, " (vtable: impl <auto trait> for {ty})")?
             }
-            Some(GlobalAlloc::Static(did)) if !tcx.is_foreign_item(did) => {
+            Some(GlobalAlloc::Static(did, _)) if !tcx.is_foreign_item(did) => {
                 match tcx.eval_static_initializer(did) {
                     Ok(alloc) => {
                         write!(w, " (static: {}, ", tcx.def_path_str(did))?;
@@ -759,7 +759,7 @@ pub fn write_allocations<'tcx>(
                     )?,
                 }
             }
-            Some(GlobalAlloc::Static(did)) => {
+            Some(GlobalAlloc::Static(did, _)) => {
                 write!(w, " (extern static: {})", tcx.def_path_str(did))?
             }
             Some(GlobalAlloc::Memory(alloc)) => {

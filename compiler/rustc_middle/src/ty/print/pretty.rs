@@ -1286,7 +1286,8 @@ pub trait PrettyPrinter<'tcx>:
                                     }
                                 }
                                 // FIXME: for statics, vtables, and functions, we could in principle print more detail.
-                                Some(GlobalAlloc::Static(def_id)) => {
+                                // FIXME (Aman): NewShinyLocalId
+                                Some(GlobalAlloc::Static(def_id, _)) => {
                                     p!(write("<static({:?})>", def_id))
                                 }
                                 Some(GlobalAlloc::Function(_)) => p!("<function>"),

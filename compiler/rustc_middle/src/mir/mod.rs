@@ -2167,7 +2167,7 @@ impl<'tcx> Constant<'tcx> {
     pub fn check_static_ptr(&self, tcx: TyCtxt<'_>) -> Option<DefId> {
         match self.literal.try_to_scalar() {
             Some(Scalar::Ptr(ptr, _size)) => match tcx.global_alloc(ptr.provenance) {
-                GlobalAlloc::Static(def_id) => {
+                GlobalAlloc::Static(def_id, _) => {
                     assert!(!tcx.is_thread_local_static(def_id));
                     Some(def_id)
                 }
