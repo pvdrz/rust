@@ -160,10 +160,12 @@ impl<'mir, 'tcx: 'mir, M: Machine<'mir, 'tcx>> InterpCx<'mir, 'tcx, M> {
         let alloc_id = ptr.provenance;
         // We need to handle `extern static`.
         match self.tcx.try_get_global_alloc(alloc_id) {
-            Some(GlobalAlloc::Static(def_id)) if self.tcx.is_thread_local_static(def_id) => {
+            // FIXME (Aman): NewShinyLocalId
+            Some(GlobalAlloc::Static(def_id, _)) if self.tcx.is_thread_local_static(def_id) => {
                 bug!("global memory cannot point to thread-local static")
             }
-            Some(GlobalAlloc::Static(def_id)) if self.tcx.is_foreign_item(def_id) => {
+            // FIXME (Aman): NewShinyLocalId
+            Some(GlobalAlloc::Static(def_id, _)) if self.tcx.is_foreign_item(def_id) => {
                 return M::extern_static_base_pointer(self, def_id);
             }
             _ => {}
@@ -484,7 +486,8 @@ impl<'mir, 'tcx: 'mir, M: Machine<'mir, 'tcx>> InterpCx<'mir, 'tcx, M> {
             Some(GlobalAlloc::Function(..)) => throw_ub!(DerefFunctionPointer(id)),
             Some(GlobalAlloc::VTable(..)) => throw_ub!(DerefVTablePointer(id)),
             None => throw_ub!(PointerUseAfterFree(id)),
-            Some(GlobalAlloc::Static(def_id)) => {
+            // FIXME (Aman): NewShinyLocalId
+            Some(GlobalAlloc::Static(def_id, _)) => {
                 assert!(self.tcx.is_static(def_id));
                 assert!(!self.tcx.is_thread_local_static(def_id));
                 // Notice that every static has two `AllocId` that will resolve to the same
@@ -677,7 +680,8 @@ impl<'mir, 'tcx: 'mir, M: Machine<'mir, 'tcx>> InterpCx<'mir, 'tcx, M> {
         // Can't do this in the match argument, we may get cycle errors since the lock would
         // be held throughout the match.
         match self.tcx.try_get_global_alloc(id) {
-            Some(GlobalAlloc::Static(def_id)) => {
+            // FIXME (Aman): NewShinyLocalId
+            Some(GlobalAlloc::Static(def_id, _)) => {
                 assert!(self.tcx.is_static(def_id));
                 assert!(!self.tcx.is_thread_local_static(def_id));
                 // Use size and align of the type.
@@ -882,7 +886,7 @@ impl<'a, 'mir, 'tcx, M: Machine<'mir, 'tcx>> std::fmt::Debug for DumpAllocs<'a, 
                         Some(GlobalAlloc::VTable(ty, None)) => {
                             write!(fmt, " (vtable: impl <auto trait> for {ty})")?;
                         }
-                        Some(GlobalAlloc::Static(did)) => {
+                        Some(GlobalAlloc::Static(did, _)) => {
                             write!(fmt, " (static: {})", self.ecx.tcx.def_path_str(did))?;
                         }
                         None => {

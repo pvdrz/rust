@@ -425,7 +425,8 @@ impl<'rt, 'mir, 'tcx: 'mir, M: Machine<'mir, 'tcx>> ValidityVisitor<'rt, 'mir, '
                 // Let's see what kind of memory this points to.
                 let alloc_kind = self.ecx.tcx.try_get_global_alloc(alloc_id);
                 match alloc_kind {
-                    Some(GlobalAlloc::Static(did)) => {
+                    // FIXME (Aman): NewShinyLocalId
+                    Some(GlobalAlloc::Static(did, _)) => {
                         // Special handling for pointers to statics (irrespective of their type).
                         assert!(!self.ecx.tcx.is_thread_local_static(did));
                         assert!(self.ecx.tcx.is_static(did));

@@ -1394,7 +1394,8 @@ fn create_mono_items_for_default_impls<'tcx>(
 /// Scans the miri alloc in order to find function calls, closures, and drop-glue.
 fn collect_miri<'tcx>(tcx: TyCtxt<'tcx>, alloc_id: AllocId, output: &mut MonoItems<'tcx>) {
     match tcx.global_alloc(alloc_id) {
-        GlobalAlloc::Static(def_id) => {
+        // FIXME (Aman): NewShinyLocalId
+        GlobalAlloc::Static(def_id, _) => {
             assert!(!tcx.is_thread_local_static(def_id));
             let instance = Instance::mono(tcx, def_id);
             if should_codegen_locally(tcx, &instance) {
