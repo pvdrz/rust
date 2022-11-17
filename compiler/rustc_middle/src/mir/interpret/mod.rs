@@ -499,15 +499,11 @@ impl<'tcx> AllocMap<'tcx> {
 //  link to old PR https://github.com/rust-lang/rust/compare/master...ferrous-systems:rust:unique_static_innards
 
 impl<'tcx> TyCtxt<'tcx> {
-    pub fn set_static_alloc_helper_map(self) {
-
-    }
-
+    pub fn set_static_alloc_helper_map(self) {}
 
     pub fn get_static_alloc_helper_map(self, alloc_id: &'tcx AllocId) -> Option<Allocation> {
         self.alloc_map.lock().static_alloc_helper_map.get(alloc_id).cloned()
     }
-
 
     /// Obtains a new allocation ID that can be referenced but does not
     /// yet have an allocation backing it.
