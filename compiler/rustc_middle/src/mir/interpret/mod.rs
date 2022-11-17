@@ -467,7 +467,7 @@ pub(crate) struct AllocMap<'tcx> {
     /// Always incremented; never gets smaller.
     next_id: AllocId,
 
-    local_id_map: FxHashMap<AllocId, Allocation>,
+    static_alloc_helper_map: FxHashMap<AllocId, Allocation>,
 }
 
 impl<'tcx> AllocMap<'tcx> {
@@ -476,7 +476,7 @@ impl<'tcx> AllocMap<'tcx> {
             alloc_map: Default::default(),
             dedup: Default::default(),
             next_id: AllocId(NonZeroU64::new(1).unwrap()),
-            local_id_map: Default::default(),
+            static_alloc_helper_map: Default::default(),
         }
     }
     fn reserve(&mut self) -> AllocId {
@@ -491,7 +491,7 @@ impl<'tcx> AllocMap<'tcx> {
 }
 
 // FIXME (Aman): const ref muts next steps -
-//  add getter and setter for local_id_map in the TyCtxt below
+//  add getter and setter for static_alloc_helper_map in the TyCtxt below
 //  import do not set this map twice, if the allocid exists, just move on or panic!
 //  then follow the compiler to add the missing field
 //  use the id in Oli's PR instead of creating new one here. and instead of putting it in extra field
@@ -499,6 +499,16 @@ impl<'tcx> AllocMap<'tcx> {
 //  link to old PR https://github.com/rust-lang/rust/compare/master...ferrous-systems:rust:unique_static_innards
 
 impl<'tcx> TyCtxt<'tcx> {
+    pub fn set_static_alloc_helper_map(self) {
+
+    }
+
+
+    pub fn get_static_alloc_helper_map(self, alloc_id: &'tcx AllocId) -> Option<Allocation> {
+        self.alloc_map.lock().static_alloc_helper_map.get(alloc_id).cloned()
+    }
+
+
     /// Obtains a new allocation ID that can be referenced but does not
     /// yet have an allocation backing it.
     ///
