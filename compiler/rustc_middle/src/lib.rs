@@ -101,4 +101,5 @@ pub mod util {
 }
 
 // Allows macros to refer to this crate as `::rustc_middle`
+// extern crate core;
 extern crate self as rustc_middle;

@@ -494,12 +494,18 @@ impl<'tcx> AllocMap<'tcx> {
 //  add getter and setter for static_alloc_helper_map in the TyCtxt below
 //  import do not set this map twice, if the allocid exists, just move on or panic!
 //  then follow the compiler to add the missing field
-//  use the id in Oli's PR instead of creating new one here. and instead of putting it in extra field
-//  as Oli does you put it in the hashmap created above.
+//  and instead of putting it in extra field as Oli does you put it in the hashmap created above.
 //  link to old PR https://github.com/rust-lang/rust/compare/master...ferrous-systems:rust:unique_static_innards
 
 impl<'tcx> TyCtxt<'tcx> {
-    pub fn set_static_alloc_helper_map(self) {}
+    pub fn set_static_alloc_helper_map(self, alloc_id: AllocId, allocation: Allocation) {
+        let mut alloc_map = self.alloc_map.lock();
+        if let Some(_) = alloc_map.static_alloc_helper_map.get(&alloc_id) {
+            panic!("There is an existing AllocID here folks");
+        } else {
+            alloc_map.static_alloc_helper_map.insert(alloc_id, allocation.clone());
+        }
+    }
 
     pub fn get_static_alloc_helper_map(self, alloc_id: &'tcx AllocId) -> Option<Allocation> {
         self.alloc_map.lock().static_alloc_helper_map.get(alloc_id).cloned()
