@@ -491,8 +491,8 @@ impl<'tcx> AllocMap<'tcx> {
 }
 
 // FIXME (Aman): const ref muts next steps -
-//  add getter and setter for static_alloc_helper_map in the TyCtxt below
-//  import do not set this map twice, if the allocid exists, just move on or panic!
+//  add getter and setter for static_alloc_helper_map in the TyCtxt below (done)
+//  import do not set this map twice, if the allocid exists, just move on or panic! (done)
 //  then follow the compiler to add the missing field
 //  and instead of putting it in extra field as Oli does you put it in the hashmap created above.
 //  link to old PR https://github.com/rust-lang/rust/compare/master...ferrous-systems:rust:unique_static_innards
@@ -544,6 +544,14 @@ impl<'tcx> TyCtxt<'tcx> {
     pub fn create_static_alloc(self, static_id: DefId) -> AllocId {
         // FIXME (Aman): NewShinyLocalId
         self.reserve_and_set_dedup(GlobalAlloc::Static(static_id, None))
+    }
+
+    // FIXME (pvdrz): Figure out if this method is correct.
+    pub fn insert_static_alloc(self, alloc_id: AllocId, static_id: DefId, index: usize) {
+        let mut alloc_map = self.alloc_map.lock();
+        let alloc = GlobalAlloc::Static(static_id, Some(NewShinyLocalId(index)));
+        alloc_map.alloc_map.insert(alloc_id, alloc.clone());
+        alloc_map.dedup.insert(alloc, alloc_id);
     }
 
     /// Generates an `AllocId` for a function.  Depending on the function type,
