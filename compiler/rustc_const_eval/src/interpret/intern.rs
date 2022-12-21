@@ -133,7 +133,6 @@ fn intern_shallow<'rt, 'mir, 'tcx, M: CompileTimeMachine<'mir, 'tcx, const_eval:
         // Part of a static (e.g. `static FOO: &&i32 = &&42;`). Make sure all pointers point to
         // what essentially amounts to an "inline static". So unlike anonymous statics, these
         // have names and thus don't get (de)duplicated.
-        // FIXME (pvdrz): Actually insert the item
         tcx.insert_static_alloc(alloc_id, item, *running_item_local_index);
         *running_item_local_index += 1;
         // link the alloc id to the actual allocation
@@ -430,7 +429,6 @@ pub fn intern_const_alloc_recursive<
                 // Even for immutable statics it would be ok to have mutable allocations behind
                 // raw pointers, e.g. for `static FOO: *const AtomicUsize = &AtomicUsize::new(42)`.
                 InternKind::Static(_, item) => {
-                    // FIXME (pvdrz): Actually insert the item
                     ecx.tcx.insert_static_alloc(alloc_id, item, running_item_local_index);
                     running_item_local_index += 1;
 

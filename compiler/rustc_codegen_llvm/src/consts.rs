@@ -245,6 +245,9 @@ impl<'ll> CodegenCx<'ll, '_> {
         }
     }
 
+
+    /// FIXME (pvdrz): Check where the DefId is being used to create a symbol. Wherever that symbol
+    /// is being used a new unique name needs to be generated using the local_id.
     pub(crate) fn get_static(&self, def_id: DefId) -> &'ll Value {
         let instance = Instance::mono(self.tcx, def_id);
         if let Some(&g) = self.instances.borrow().get(&instance) {

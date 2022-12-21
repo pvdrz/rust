@@ -486,8 +486,12 @@ impl<'mir, 'tcx: 'mir, M: Machine<'mir, 'tcx>> InterpCx<'mir, 'tcx, M> {
             Some(GlobalAlloc::Function(..)) => throw_ub!(DerefFunctionPointer(id)),
             Some(GlobalAlloc::VTable(..)) => throw_ub!(DerefVTablePointer(id)),
             None => throw_ub!(PointerUseAfterFree(id)),
-            // FIXME (Aman): NewShinyLocalId
-            Some(GlobalAlloc::Static(def_id, _)) => {
+            Some(GlobalAlloc::Static(def_id, Some(_))) => {
+                // FIXME (pvdrz): Handle unwrap
+                let allocation = self.tcx.get_static_alloc_helper_map(id).unwrap();
+                (self.tcx.intern_const_alloc(allocation), Some(def_id))
+            }
+            Some(GlobalAlloc::Static(def_id, None)) => {
                 assert!(self.tcx.is_static(def_id));
                 assert!(!self.tcx.is_thread_local_static(def_id));
                 // Notice that every static has two `AllocId` that will resolve to the same

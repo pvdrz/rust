@@ -183,7 +183,14 @@ pub enum LitToConstError {
 /// A counter to keep a track of the allocations for statics
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, HashStable, TyEncodable, TyDecodable)]
 #[repr(transparent)]
+// FIXME (pvdrz): Get a better name at some point
 pub struct NewShinyLocalId(usize);
+
+impl fmt::Display for NewShinyLocalId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "nsl{}", self.0)
+    }
+}
 
 impl fmt::Debug for NewShinyLocalId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -507,8 +514,8 @@ impl<'tcx> TyCtxt<'tcx> {
         }
     }
 
-    pub fn get_static_alloc_helper_map(self, alloc_id: &'tcx AllocId) -> Option<Allocation> {
-        self.alloc_map.lock().static_alloc_helper_map.get(alloc_id).cloned()
+    pub fn get_static_alloc_helper_map(self, alloc_id: AllocId) -> Option<Allocation> {
+        self.alloc_map.lock().static_alloc_helper_map.get(&alloc_id).cloned()
     }
 
     /// Obtains a new allocation ID that can be referenced but does not

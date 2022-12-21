@@ -270,10 +270,10 @@ impl<'ll, 'tcx> ConstMethods<'tcx> for CodegenCx<'ll, 'tcx> {
                         let value = self.static_addr_of(init, alloc.inner().align, None);
                         (value, AddressSpace::DATA)
                     }
-                    // FIXME (Aman): NewShinyLocalId
-                    GlobalAlloc::Static(def_id, _) => {
+                    GlobalAlloc::Static(def_id, _local_id) => {
                         assert!(self.tcx.is_static(def_id));
                         assert!(!self.tcx.is_thread_local_static(def_id));
+                        // FIXME (pvdrz): Propagate local_id here.
                         (self.get_static(def_id), AddressSpace::DATA)
                     }
                 };

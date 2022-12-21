@@ -1394,13 +1394,23 @@ fn create_mono_items_for_default_impls<'tcx>(
 /// Scans the miri alloc in order to find function calls, closures, and drop-glue.
 fn collect_miri<'tcx>(tcx: TyCtxt<'tcx>, alloc_id: AllocId, output: &mut MonoItems<'tcx>) {
     match tcx.global_alloc(alloc_id) {
-        // FIXME (Aman): NewShinyLocalId
-        GlobalAlloc::Static(def_id, _) => {
+        GlobalAlloc::Static(def_id, None) => {
             assert!(!tcx.is_thread_local_static(def_id));
             let instance = Instance::mono(tcx, def_id);
             if should_codegen_locally(tcx, &instance) {
                 trace!("collecting static {:?}", def_id);
                 output.push(dummy_spanned(MonoItem::Static(def_id)));
+            }
+        }
+        GlobalAlloc::Static(_, Some(_)) => {
+            // FIXME (pvdrz): Handle unwrap
+            let allocation = tcx.get_static_alloc_helper_map(alloc_id).unwrap();
+            let alloc = tcx.intern_const_alloc(allocation);
+            trace!("collecting {:?} with {:#?}", alloc_id, alloc);
+            for &inner in alloc.inner().provenance().values() {
+                rustc_data_structures::stack::ensure_sufficient_stack(|| {
+                    collect_miri(tcx, inner, output);
+                });
             }
         }
         GlobalAlloc::Memory(alloc) => {
