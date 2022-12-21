@@ -1190,8 +1190,10 @@ impl<'a, 'll, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'll, 'tcx> {
 
 impl<'ll> StaticBuilderMethods for Builder<'_, 'll, '_> {
     fn get_static(&mut self, def_id: DefId) -> &'ll Value {
+
+        // FIXME (pvdrz): can this just be `None`, or should we propagate? 
         // Forward to the `get_static` method of `CodegenCx`
-        self.cx().get_static(def_id)
+        self.cx().get_static(def_id, None)
     }
 }
 

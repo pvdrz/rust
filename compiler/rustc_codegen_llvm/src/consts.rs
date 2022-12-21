@@ -14,7 +14,7 @@ use rustc_hir::def_id::DefId;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::interpret::{
     read_target_uint, Allocation, ConstAllocation, ErrorHandled, GlobalAlloc, InitChunk, Pointer,
-    Scalar as InterpScalar,
+    Scalar as InterpScalar, NewShinyLocalId,
 };
 use rustc_middle::mir::mono::MonoItem;
 use rustc_middle::ty::layout::LayoutOf;
@@ -248,7 +248,7 @@ impl<'ll> CodegenCx<'ll, '_> {
 
     /// FIXME (pvdrz): Check where the DefId is being used to create a symbol. Wherever that symbol
     /// is being used a new unique name needs to be generated using the local_id.
-    pub(crate) fn get_static(&self, def_id: DefId) -> &'ll Value {
+    pub(crate) fn get_static(&self, def_id: DefId, _local_id: Option<NewShinyLocalId>) -> &'ll Value {
         let instance = Instance::mono(self.tcx, def_id);
         if let Some(&g) = self.instances.borrow().get(&instance) {
             return g;
@@ -387,7 +387,8 @@ impl<'ll> StaticMethods for CodegenCx<'ll, '_> {
             };
             let alloc = alloc.inner();
 
-            let g = self.get_static(def_id);
+            // FIXME (pvdrz): can this just be `None`? 
+            let g = self.get_static(def_id, None);
 
             // boolean SSA values are i1, but they have to be stored in i8 slots,
             // otherwise some LLVM optimization passes don't work as expected

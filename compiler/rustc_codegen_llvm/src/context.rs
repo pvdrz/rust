@@ -891,7 +891,8 @@ impl<'ll> CodegenCx<'ll, '_> {
         let tcx = self.tcx;
         assert!(self.sess().target.os == "emscripten");
         let eh_catch_typeinfo = match tcx.lang_items().eh_catch_typeinfo() {
-            Some(def_id) => self.get_static(def_id),
+            // FIXME (pvdrz): can this just be `None`? 
+            Some(def_id) => self.get_static(def_id, None),
             _ => {
                 let ty = self
                     .type_struct(&[self.type_ptr_to(self.type_isize()), self.type_i8p()], false);

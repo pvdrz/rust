@@ -155,7 +155,8 @@ impl<'ll, 'tcx> AsmBuilderMethods<'tcx> for Builder<'_, 'll, 'tcx> {
                     constraints.push("s".to_string());
                 }
                 InlineAsmOperandRef::SymStatic { def_id } => {
-                    inputs.push(self.cx.get_static(def_id));
+                    // FIXME (pvdrz): can this just be `None`? 
+                    inputs.push(self.cx.get_static(def_id, None));
                     op_idx.insert(idx, constraints.len());
                     constraints.push("s".to_string());
                 }
@@ -364,7 +365,8 @@ impl<'tcx> AsmMethods<'tcx> for CodegenCx<'_, 'tcx> {
                                 .borrow()
                                 .get(&def_id)
                                 .copied()
-                                .unwrap_or_else(|| self.get_static(def_id));
+                                // FIXME (pvdrz): can this just be `None`? 
+                                .unwrap_or_else(|| self.get_static(def_id, None));
                             self.add_compiler_used_global(llval);
                             let symbol = llvm::build_string(|s| unsafe {
                                 llvm::LLVMRustGetMangledName(llval, s);
