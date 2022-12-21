@@ -184,7 +184,7 @@ pub enum LitToConstError {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, HashStable, TyEncodable, TyDecodable)]
 #[repr(transparent)]
 // FIXME (pvdrz): Get a better name at some point
-pub struct NewShinyLocalId(usize);
+pub struct NewShinyLocalId(pub usize);
 
 impl fmt::Display for NewShinyLocalId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -217,6 +217,8 @@ enum AllocDiscriminant {
     Fn,
     VTable,
     Static,
+    // FIXME (pvdrz): find a better name 
+    StaticAllocOrSomething,
 }
 
 pub fn specialized_encode_alloc_id<'tcx, E: TyEncoder<I = TyCtxt<'tcx>>>(
@@ -242,12 +244,18 @@ pub fn specialized_encode_alloc_id<'tcx, E: TyEncoder<I = TyCtxt<'tcx>>>(
             poly_trait_ref.encode(encoder);
         }
         // FIXME (Aman): NewShinyLocalId
-        GlobalAlloc::Static(did, _) => {
+        GlobalAlloc::Static(did, None) => {
             assert!(!tcx.is_thread_local_static(did));
             // References to statics doesn't need to know about their allocations,
             // just about its `DefId`.
             AllocDiscriminant::Static.encode(encoder);
             did.encode(encoder);
+        }
+        GlobalAlloc::Static(did, Some(lid)) => {
+            AllocDiscriminant::StaticAllocOrSomething.encode(encoder);
+            did.encode(encoder);
+            lid.encode(encoder);
+            tcx.get_static_alloc_helper_map(alloc_id).encode(encoder);
         }
     }
 }
@@ -324,7 +332,7 @@ impl<'s> AllocDecodingSession<'s> {
                 ref mut entry @ State::Empty => {
                     // We are allowed to decode.
                     match alloc_kind {
-                        AllocDiscriminant::Alloc => {
+                        AllocDiscriminant::Alloc | AllocDiscriminant::StaticAllocOrSomething => {
                             // If this is an allocation, we need to reserve an
                             // `AllocId` so we can decode cyclic graphs.
                             let alloc_id = decoder.interner().reserve_alloc_id();
@@ -400,6 +408,17 @@ impl<'s> AllocDecodingSession<'s> {
                     let did = <DefId as Decodable<D>>::decode(decoder);
                     trace!("decoded static def-ID: {:?}", did);
                     let alloc_id = decoder.interner().create_static_alloc(did);
+                    alloc_id
+                }
+                AllocDiscriminant::StaticAllocOrSomething => {
+                    let alloc_id = alloc_id.unwrap();
+                    trace!("creating extern static alloc ID");
+                    let did = <DefId as Decodable<D>>::decode(decoder);
+                    let lid = <NewShinyLocalId as Decodable<D>>::decode(decoder);
+                    let alloc = <Allocation as Decodable<_>>::decode(decoder);
+                    trace!("decoded static def-ID: {:?}", did);
+                    decoder.interner().insert_static_alloc(alloc_id, did, lid.0);
+                    decoder.interner().set_static_alloc_helper_map(alloc_id, alloc);
                     alloc_id
                 }
             }

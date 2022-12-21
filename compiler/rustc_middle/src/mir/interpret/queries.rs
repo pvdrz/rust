@@ -195,7 +195,17 @@ impl<'tcx> TyCtxtAt<'tcx> {
         let param_env = param_env.with_const();
         trace!("eval_to_allocation: Need to compute {:?}", gid);
         let raw_const = self.eval_to_allocation_raw(param_env.and(gid))?;
-        Ok(self.global_alloc(raw_const.alloc_id).unwrap_memory())
+        match self.global_alloc(raw_const.alloc_id) {
+            mir::interpret::GlobalAlloc::Function(_)
+            | mir::interpret::GlobalAlloc::VTable(_, _)
+            | mir::interpret::GlobalAlloc::Static(_, None) => unreachable!(),
+            mir::interpret::GlobalAlloc::Static(_, Some(_)) => {
+                // FIXME (pvdrz): Handle unwrap
+                let allocation = self.get_static_alloc_helper_map(raw_const.alloc_id).unwrap();
+                Ok(self.intern_const_alloc(allocation))
+            }
+            mir::interpret::GlobalAlloc::Memory(const_alloc) => Ok(const_alloc),
+        }
     }
 }
 
