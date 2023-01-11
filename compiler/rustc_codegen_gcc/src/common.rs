@@ -202,7 +202,8 @@ impl<'gcc, 'tcx> ConstMethods<'tcx> for CodegenCx<'gcc, 'tcx> {
                             let init = const_alloc_to_gcc(self, alloc);
                             self.static_addr_of(init, alloc.inner().align, None)
                         }
-                        GlobalAlloc::Static(def_id) => {
+                        // FIXME (pvdrz): handle local_id
+                        GlobalAlloc::Static(def_id, _) => {
                             assert!(self.tcx.is_static(def_id));
                             self.get_static(def_id).get_address(None)
                         },

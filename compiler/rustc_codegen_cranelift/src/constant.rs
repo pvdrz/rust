@@ -198,7 +198,8 @@ pub(crate) fn codegen_const_value<'tcx>(
                             fx.module.declare_data_in_func(data_id, &mut fx.bcx.func);
                         fx.bcx.ins().global_value(fx.pointer_type, local_data_id)
                     }
-                    GlobalAlloc::Static(def_id) => {
+                    // FIXME (pvdrz): handle local_id
+                    GlobalAlloc::Static(def_id, _) => {
                         assert!(fx.tcx.is_static(def_id));
                         let data_id = data_id_for_static(fx.tcx, fx.module, def_id, false);
                         let local_data_id =
@@ -343,7 +344,8 @@ fn define_all_allocs(tcx: TyCtxt<'_>, module: &mut dyn Module, cx: &mut Constant
             TodoItem::Alloc(alloc_id) => {
                 let alloc = match tcx.global_alloc(alloc_id) {
                     GlobalAlloc::Memory(alloc) => alloc,
-                    GlobalAlloc::Function(_) | GlobalAlloc::Static(_) | GlobalAlloc::VTable(..) => {
+                    // FIXME (pvdrz): handle local_id
+                    GlobalAlloc::Function(_) | GlobalAlloc::Static(_, _) | GlobalAlloc::VTable(..) => {
                         unreachable!()
                     }
                 };
@@ -426,7 +428,8 @@ fn define_all_allocs(tcx: TyCtxt<'_>, module: &mut dyn Module, cx: &mut Constant
                     let alloc_id = tcx.vtable_allocation((ty, trait_ref));
                     data_id_for_alloc_id(cx, module, alloc_id, Mutability::Not)
                 }
-                GlobalAlloc::Static(def_id) => {
+                // FIXME (pvdrz): handle local_id
+                GlobalAlloc::Static(def_id, _) => {
                     if tcx.codegen_fn_attrs(def_id).flags.contains(CodegenFnAttrFlags::THREAD_LOCAL)
                     {
                         tcx.sess.fatal(&format!(

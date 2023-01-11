@@ -934,10 +934,12 @@ impl<'mir, 'tcx> Machine<'mir, 'tcx> for MiriMachine<'mir, 'tcx> {
             // The machine promises to never call us on thread-local or extern statics.
             let alloc_id = ptr.provenance;
             match ecx.tcx.try_get_global_alloc(alloc_id) {
-                Some(GlobalAlloc::Static(def_id)) if ecx.tcx.is_thread_local_static(def_id) => {
+                // FIXME (pvdrz): handle local_id
+                Some(GlobalAlloc::Static(def_id, _)) if ecx.tcx.is_thread_local_static(def_id) => {
                     panic!("adjust_alloc_base_pointer called on thread-local static")
                 }
-                Some(GlobalAlloc::Static(def_id)) if ecx.tcx.is_foreign_item(def_id) => {
+                // FIXME (pvdrz): handle local_id
+                Some(GlobalAlloc::Static(def_id, _)) if ecx.tcx.is_foreign_item(def_id) => {
                     panic!("adjust_alloc_base_pointer called on extern static")
                 }
                 _ => {}
