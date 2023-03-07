@@ -248,9 +248,9 @@ impl<'ll> CodegenCx<'ll, '_> {
 
     /// FIXME (pvdrz): Check where the DefId is being used to create a symbol. Wherever that symbol
     /// is being used a new unique name needs to be generated using the local_id.
-    pub(crate) fn get_static(&self, def_id: DefId, _local_id: Option<NewShinyLocalId>) -> &'ll Value {
+    pub(crate) fn get_static(&self, def_id: DefId, local_id: Option<NewShinyLocalId>) -> &'ll Value {
         let instance = Instance::mono(self.tcx, def_id);
-        if let Some(&g) = self.instances.borrow().get(&instance) {
+        if let Some(&g) = self.instances.borrow().get(&(instance, local_id)) {
             return g;
         }
 
@@ -265,6 +265,8 @@ impl<'ll> CodegenCx<'ll, '_> {
 
         let ty = instance.ty(self.tcx, ty::ParamEnv::reveal_all());
         let sym = self.tcx.symbol_name(instance).name;
+        let sym = if let Some(local_id) = local_id { format!("{sym}_{local_id}")} else { sym.to_owned()};
+        let sym = &sym;
         let fn_attrs = self.tcx.codegen_fn_attrs(def_id);
 
         debug!("get_static: sym={} instance={:?} fn_attrs={:?}", sym, instance, fn_attrs);
@@ -351,7 +353,7 @@ impl<'ll> CodegenCx<'ll, '_> {
             }
         }
 
-        self.instances.borrow_mut().insert(instance, g);
+        self.instances.borrow_mut().insert((instance, local_id), g);
         g
     }
 }

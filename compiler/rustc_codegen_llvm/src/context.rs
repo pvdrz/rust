@@ -16,6 +16,7 @@ use rustc_data_structures::base_n;
 use rustc_data_structures::fx::FxHashMap;
 use rustc_data_structures::small_c_str::SmallCStr;
 use rustc_hir::def_id::DefId;
+use rustc_middle::mir::interpret::NewShinyLocalId;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::ty::layout::{
     FnAbiError, FnAbiOfHelpers, FnAbiRequest, HasParamEnv, LayoutError, LayoutOfHelpers,
@@ -51,8 +52,9 @@ pub struct CodegenCx<'ll, 'tcx> {
     pub llcx: &'ll llvm::Context,
     pub codegen_unit: &'tcx CodegenUnit<'tcx>,
 
+    // FIXME pvdrz: document this
     /// Cache instances of monomorphic and polymorphic items
-    pub instances: RefCell<FxHashMap<Instance<'tcx>, &'ll Value>>,
+    pub instances: RefCell<FxHashMap<(Instance<'tcx>, Option<NewShinyLocalId>), &'ll Value>>,
     /// Cache generated vtables
     pub vtables:
         RefCell<FxHashMap<(Ty<'tcx>, Option<ty::PolyExistentialTraitRef<'tcx>>), &'ll Value>>,

@@ -38,7 +38,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'_, 'tcx> {
             }
         }
 
-        self.instances.borrow_mut().insert(instance, g);
+        self.instances.borrow_mut().insert((instance, None), g);
     }
 
     fn predefine_fn(
@@ -86,7 +86,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'_, 'tcx> {
             }
         }
 
-        self.instances.borrow_mut().insert(instance, lldecl);
+        self.instances.borrow_mut().insert((instance, None), lldecl);
     }
 }
 

@@ -30,7 +30,7 @@ pub fn get_fn<'ll, 'tcx>(cx: &CodegenCx<'ll, 'tcx>, instance: Instance<'tcx>) ->
     assert!(!instance.substs.needs_infer());
     assert!(!instance.substs.has_escaping_bound_vars());
 
-    if let Some(&llfn) = cx.instances.borrow().get(&instance) {
+    if let Some(&llfn) = cx.instances.borrow().get(&(instance, None)) {
         return llfn;
     }
 
@@ -194,7 +194,7 @@ pub fn get_fn<'ll, 'tcx>(cx: &CodegenCx<'ll, 'tcx>, instance: Instance<'tcx>) ->
         llfn
     };
 
-    cx.instances.borrow_mut().insert(instance, llfn);
+    cx.instances.borrow_mut().insert((instance, None), llfn);
 
     llfn
 }
